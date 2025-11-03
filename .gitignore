@@ -138,6 +138,8 @@ dmypy.json
 *.hdf5
 *.ckpt
 *.safetensors
+# Exception: yolo5_fashion2 folder
+!yolo5_fashion2/**/*.pt
 
 # Data directories
 data/raw/
@@ -146,6 +148,8 @@ data/external/
 *.csv
 *.json
 *.parquet
+# Exception: yolo5_fashion2 folder
+!yolo5_fashion2/**/*.csv
 
 # Jupyter notebooks (optional - uncomment if you don't want to track notebooks)
 # *.ipynb
