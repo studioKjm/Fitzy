@@ -142,6 +142,8 @@ dmypy.json
 !yolo5_fashion2/**/*.pt
 
 # Data directories
+# data 디렉터리 전체를 gitignore 처리 (용량이 크므로)
+data/
 data/raw/
 data/processed/
 data/external/
