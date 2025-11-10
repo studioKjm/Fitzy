@@ -286,7 +286,7 @@ class RecommendationEngine:
                 if gender == "남성":
                     if color:
                         enhanced_products.append(f"유니클로 U 크루넥 티셔츠 ({color})")
-                else:
+                    else:
                         enhanced_products.append("유니클로 U 크루넥 티셔츠")
                 else:
                     if color:
