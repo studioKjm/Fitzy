@@ -686,7 +686,7 @@ class VirtualFittingSystem:
         if extracted_color:
             # 색상명 제거하여 타입만 남김
             for kr, en in COLOR_MAP.items():
-            if kr in item_text:
+                if kr in item_text:
                     en_item = en_item.replace(kr, "").strip()
                 if en.lower() in item_text_lower:
                     en_item = en_item.replace(en, "").strip()
@@ -709,7 +709,7 @@ class VirtualFittingSystem:
                     else:
                         extracted_type = f"{extracted_type} {en}"
                 else:
-                extracted_type = en
+                    extracted_type = en
                 en_item = en_item.replace(kr, "")
         
         # 재질 추출
