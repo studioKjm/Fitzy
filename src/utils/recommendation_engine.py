@@ -304,7 +304,7 @@ class RecommendationEngine:
                         break
                 
                 if "코트" in item:
-            if gender == "남성":
+                    if gender == "남성":
                         if color:
                             enhanced_products.append(f"코스 코트 ({color})")
                         else:
@@ -350,19 +350,19 @@ class RecommendationEngine:
                     if color:
                         enhanced_products.append(f"리바이스 511 슬림진 ({color})")
                     else:
-                enhanced_products.append("리바이스 511 슬림진")
+                        enhanced_products.append("리바이스 511 슬림진")
                 else:
                     if color:
                         enhanced_products.append(f"H&M 하이웨스트 진 ({color})")
-            else:
-                enhanced_products.append("H&M 하이웨스트 진")
+                    else:
+                        enhanced_products.append("H&M 하이웨스트 진")
         
             # 신발 아이템 처리
             elif "부츠" in item or "스니커" in item or "신발" in item:
                 if "부츠" in item:
                     if gender == "남성":
                         enhanced_products.append("닥터마틴 1461")
-            else:
+                    else:
                         enhanced_products.append("찰스앤키스 앵클부츠")
                 elif "스니커" in item:
                     if gender == "남성":
@@ -378,9 +378,9 @@ class RecommendationEngine:
         # 아이템 기반 제품이 3개 미만이면 스타일 기반 제품으로 보완
         if len(enhanced_products) < 3:
             style_products = self.recommend_products(style, gender)
-        for product in style_products:
-            if product not in enhanced_products:
-                enhanced_products.append(product)
+            for product in style_products:
+                if product not in enhanced_products:
+                    enhanced_products.append(product)
                     if len(enhanced_products) >= 3:
                         break
         
@@ -531,7 +531,7 @@ class RecommendationEngine:
             elif top_color in ["흰색", "베이지"]:
                 bottom_color = "네이비" if top_color == "흰색" else "회색"
             else:
-            bottom_color = self._get_color_from_palette(mbti_style, seasonal_info, "bottom")
+                bottom_color = self._get_color_from_palette(mbti_style, seasonal_info, "bottom")
         elif style_priority == "season":
             # 계절 스타일: 계절 색상 우선
             seasonal_colors = seasonal_info.get("colors", [])
