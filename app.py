@@ -15,6 +15,7 @@ from src.utils.visualization import draw_detections
 from src.utils.body_analysis import BodyAnalyzer
 from src.utils.scoring_system import ScoringSystem
 from src.utils.virtual_fitting import VirtualFittingSystem
+from src.utils.chatbot import FashionChatbot
 from config import MBTI_STYLES
 
 # 설정 파일 경로
@@ -49,6 +50,16 @@ if 'body_analyzer' not in st.session_state:
     st.session_state.body_analyzer = BodyAnalyzer()
 if 'scoring_system' not in st.session_state:
     st.session_state.scoring_system = ScoringSystem()
+if 'chatbot' not in st.session_state:
+    try:
+        st.session_state.chatbot = FashionChatbot()
+    except Exception as e:
+        st.session_state.chatbot = None
+        st.warning(f"챗봇 초기화 실패: {e}")
+if 'chat_messages' not in st.session_state:
+    st.session_state.chat_messages = []
+if 'chat_open' not in st.session_state:
+    st.session_state.chat_open = False
 if 'virtual_fitting' not in st.session_state:
     st.session_state.virtual_fitting = VirtualFittingSystem(
         st.session_state.fashion_recommender.detector,
@@ -200,6 +211,167 @@ def render_outfit_items_display(idx, recommendations, image_suggestions, has_ima
             st.write(f"• {item2}")
     
     return displayed_items
+
+def render_chat_button():
+    """우측 하단 고정 채팅 버튼 렌더링 (플로팅 버튼)"""
+    # CSS로 우측 하단 고정 플로팅 버튼 스타일 적용
+    st.markdown("""
+    <style>
+    /* 플로팅 채팅 버튼 컨테이너 */
+    .floating-chat-button-container {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        z-index: 1000;
+    }
+    
+    /* Streamlit 버튼 스타일 오버라이드 - chat_toggle_button 키를 가진 버튼 */
+    div[data-testid="stButton"]:has(button[key*="chat_toggle"]) {
+        position: fixed !important;
+        bottom: 20px !important;
+        right: 20px !important;
+        z-index: 1000 !important;
+    }
+    
+    div[data-testid="stButton"]:has(button[key*="chat_toggle"]) > button {
+        width: 60px !important;
+        height: 60px !important;
+        border-radius: 50% !important;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+        border: none !important;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2) !important;
+        font-size: 28px !important;
+        padding: 0 !important;
+        transition: all 0.3s ease !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+    }
+    
+    div[data-testid="stButton"]:has(button[key*="chat_toggle"]) > button:hover {
+        transform: scale(1.1) !important;
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3) !important;
+    }
+    
+    /* JavaScript로 동적 스타일 적용 */
+    </style>
+    <script>
+    function styleChatButton() {
+        // 💬 이모지를 포함한 버튼 찾기
+        const buttons = document.querySelectorAll('button');
+        buttons.forEach(button => {
+            if (button.textContent.includes('💬')) {
+                const parent = button.closest('div[data-testid="stButton"]');
+                if (parent) {
+                    parent.style.position = 'fixed';
+                    parent.style.bottom = '20px';
+                    parent.style.right = '20px';
+                    parent.style.zIndex = '1000';
+                    button.style.width = '60px';
+                    button.style.height = '60px';
+                    button.style.borderRadius = '50%';
+                    button.style.background = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
+                    button.style.border = 'none';
+                    button.style.boxShadow = '0 4px 15px rgba(0, 0, 0, 0.2)';
+                    button.style.fontSize = '28px';
+                    button.style.padding = '0';
+                    button.style.transition = 'all 0.3s ease';
+                    button.style.display = 'flex';
+                    button.style.alignItems = 'center';
+                    button.style.justifyContent = 'center';
+                    button.style.cursor = 'pointer';
+                }
+            }
+        });
+    }
+    
+    // 페이지 로드 시 실행
+    window.addEventListener('load', styleChatButton);
+    
+    // Streamlit 리로드 대응 (MutationObserver 사용)
+    const observer = new MutationObserver(styleChatButton);
+    observer.observe(document.body, { childList: true, subtree: true });
+    
+    // 주기적으로도 확인 (대체 방법)
+    setInterval(styleChatButton, 500);
+    </script>
+    """, unsafe_allow_html=True)
+    
+    # 플로팅 버튼 생성
+    if st.button("💬", key="chat_toggle_button", use_container_width=False):
+        st.session_state.chat_open = not st.session_state.chat_open
+        st.rerun()
+
+def render_chat_ui(mbti=None, gender=None, temperature=None, weather=None, season=None, detected_items=None):
+    """채팅 UI 렌더링"""
+    if not st.session_state.chat_open:
+        return
+    
+    # 채팅 UI 컨테이너
+    with st.container():
+        st.markdown("---")
+        st.subheader("💬 코디 추천 챗봇")
+        st.caption("챗봇과 대화하며 코디를 추천받아보세요!")
+        
+        # 채팅 메시지 표시
+        chat_container = st.container()
+        with chat_container:
+            for msg in st.session_state.chat_messages:
+                with st.chat_message(msg["role"]):
+                    st.markdown(msg["content"])
+        
+        # 채팅 입력
+        if prompt := st.chat_input("코디 추천을 요청하거나 질문을 입력하세요..."):
+            # 사용자 메시지 추가
+            st.session_state.chat_messages.append({"role": "user", "content": prompt})
+            with st.chat_message("user"):
+                st.markdown(prompt)
+            
+            # 챗봇 응답 생성
+            if st.session_state.chatbot:
+                with st.chat_message("assistant"):
+                    message_placeholder = st.empty()
+                    message_placeholder.markdown("생각 중...")
+                    
+                    # 사용자 컨텍스트 준비
+                    user_context = {
+                        "gender": gender,
+                        "mbti": mbti,
+                        "temperature": temperature,
+                        "weather": weather,
+                        "season": season,
+                        "detected_items": detected_items
+                    }
+                    
+                    # 대화 기록 준비 (시스템 메시지 제외)
+                    conversation_history = [
+                        {"role": msg["role"], "content": msg["content"]}
+                        for msg in st.session_state.chat_messages[:-1]  # 현재 메시지 제외
+                    ]
+                    
+                    # 챗봇 응답 생성
+                    response = st.session_state.chatbot.chat(
+                        prompt,
+                        conversation_history=conversation_history,
+                        user_context=user_context
+                    )
+                    
+                    message_placeholder.markdown(response)
+                    st.session_state.chat_messages.append({"role": "assistant", "content": response})
+            else:
+                with st.chat_message("assistant"):
+                    st.error("챗봇이 초기화되지 않았습니다. 환경변수를 확인해주세요.")
+        
+        # 채팅 초기화 버튼
+        col1, col2 = st.columns([1, 4])
+        with col1:
+            if st.button("🗑️ 대화 초기화", key="clear_chat"):
+                st.session_state.chat_messages = []
+                st.rerun()
+        with col2:
+            if st.button("❌ 채팅 닫기", key="close_chat"):
+                st.session_state.chat_open = False
+                st.rerun()
 
 def main():
     """메인 애플리케이션 함수"""
@@ -363,6 +535,8 @@ def main():
             # 먼저 YOLO/CLIP 분석 실행 (점수 계산을 위해)
             fr = st.session_state.fashion_recommender
             result = fr.recommend_outfit(processed_image, mbti_type, temperature, weather, season)
+            # 채팅 UI에서 사용할 수 있도록 결과 저장
+            st.session_state.last_analysis_result = result
             
             # 가상 피팅용 원본 이미지 저장
             user_uploaded_image = image
@@ -490,6 +664,40 @@ def main():
     with tab4:
         # 모델 관리 페이지
         display_model_manager()
+    
+    # 채팅 UI 렌더링 (탭 아래에 표시)
+    # 탐지된 아이템 정보 가져오기
+    detected_items_list = None
+    if 'user_uploaded_image_for_search' in st.session_state:
+        # 이미지 분석 결과가 있는 경우
+        try:
+            # result가 있는 경우 사용
+            if 'last_analysis_result' in st.session_state:
+                result_data = st.session_state.last_analysis_result
+                detected_items_data = result_data.get("detected_items", {})
+                detected_items_list = detected_items_data.get("items", [])
+        except:
+            pass
+    
+    # 현재 설정값 가져오기
+    current_mbti = st.session_state.get('saved_mbti', 'ENFP')
+    current_gender = None
+    gender_index = st.session_state.get('selected_gender', 0)
+    gender_map = {0: "남성", 1: "여성", 2: "공용"}
+    current_gender = gender_map.get(gender_index, "공용")
+    current_temp = st.session_state.get('saved_temperature', 20)
+    current_weather = st.session_state.get('saved_weather', '맑음')
+    current_season = st.session_state.get('saved_season', '봄')
+    
+    # 채팅 UI 렌더링
+    render_chat_ui(
+        mbti=current_mbti,
+        gender=current_gender,
+        temperature=current_temp,
+        weather=current_weather,
+        season=current_season,
+        detected_items=detected_items_list
+    )
 
 def display_outfit_recommendations(image, mbti, temp, weather, season, gender, debug_mode=False, 
                                    face_info=None, body_info=None, original_image=None,
@@ -1314,4 +1522,6 @@ def display_model_manager():
                 st.code(report, language="json")
 
 if __name__ == "__main__":
+    # 채팅 버튼 렌더링 (우측 하단 고정 플로팅 버튼)
+    render_chat_button()
     main()
