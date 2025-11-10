@@ -153,6 +153,9 @@ data/external/
 # Exception: yolo5_fashion2 folder
 !yolo5_fashion2/**/*.csv
 
+# DeepFashion2 dataset (too large for Git)
+deepfashion2_data/
+
 # Jupyter notebooks (optional - uncomment if you don't want to track notebooks)
 # *.ipynb
 
